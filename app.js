@@ -18,6 +18,8 @@ const SKINS = {
   classic: { name: 'Classica', price: 0, paper: ['#fffdf5', '#e6dcc2'] },
   hemp: { name: 'Canapa', price: 60, paper: ['#e2cfa4', '#b39661'] },
   rasta: { name: 'Rasta', price: 150, stripes: ['#e53935', '#fdd835', '#43a047'] },
+  panettone: { name: 'Cinepanettone', price: 250, stripes: ['#c62828', '#fffdf5', '#c62828', '#fffdf5', '#c62828', '#2e7d32'] },
+  glitter: { name: 'Glitter Pop', price: 250, paper: ['#fde4f0', '#f06292'], stars: true },
   gold: { name: 'Oro di Zion', price: 300, paper: ['#fff6a8', '#c9930e'] },
   cosmic: { name: 'Cosmica', price: 500, paper: ['#8e44ff', '#1d0b45'], stars: true },
   rainbow: { name: 'Arcobaleno', price: 800, stripes: ['#ff5252', '#ffb300', '#ffee58', '#66bb6a', '#42a5f5', '#ab47bc'], anim: true },
