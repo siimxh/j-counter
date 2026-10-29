@@ -1,7 +1,7 @@
 // JAH-PACK RIDE — a Jetpack Joyride-style runner where the rocket backpack spits joints.
 const Game = (() => {
   let cv, ctx, W = 0, H = 0, raf = 0, last = 0;
-  let state = 'idle', hold = false, onOver = () => {}, hud = {};
+  let state = 'idle', hold = false, onOver = () => {}, hud = {}, char = 'rasta';
   let p, obs, coins, missiles, parts, bg, dist, speed, leaves, t;
   let leafSpr, leafSprBg;
   const G = 0.42, THRUST = 0.95, TOP = 18, FLOOR_H = 42;
@@ -80,7 +80,7 @@ const Game = (() => {
       p.y += p.vy * dt;
       const floor = H - FLOOR_H - p.r - 8;
       if (p.y > floor) { p.y = floor; p.vy = 0; }
-      if (p.y < TOP + 34) { p.y = TOP + 34; p.vy = 0; }
+      if (p.y < TOP + 40) { p.y = TOP + 40; p.vy = 0; }
 
       // the jetpack spits joints
       if (hold && Math.random() < .55 * dt) {
@@ -154,34 +154,84 @@ const Game = (() => {
 
   function drawPlayer() {
     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(Math.max(-.3, Math.min(.3, p.vy * .035)));
-    // jetpack: two rockets
-    for (const ox of [-24, -15]) {
-      ctx.fillStyle = '#8d99a6'; ctx.beginPath(); ctx.roundRect(ox, -6, 9, 22, 4); ctx.fill();
-      ctx.fillStyle = '#e53935'; ctx.fillRect(ox, -2, 9, 3);
-      ctx.fillStyle = '#fdd835'; ctx.fillRect(ox, 1, 9, 3);
-      ctx.fillStyle = '#43a047'; ctx.fillRect(ox, 4, 9, 3);
-      ctx.fillStyle = '#555'; ctx.fillRect(ox + 1, 16, 7, 3);
-    }
-    // legs
-    ctx.strokeStyle = '#3b2a1a'; ctx.lineWidth = 5; ctx.lineCap = 'round';
     const sw = state === 'run' && p.vy === 0 ? Math.sin(dist * .15) * 5 : 3;
-    ctx.beginPath(); ctx.moveTo(-3, 16); ctx.lineTo(-3 + sw, 28); ctx.moveTo(4, 16); ctx.lineTo(4 - sw, 28); ctx.stroke();
-    // body
-    ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.roundRect(-9, -4, 20, 22, 6); ctx.fill();
-    ctx.fillStyle = '#fdd835'; ctx.fillRect(-9, 5, 20, 3);
-    // dreads
-    ctx.strokeStyle = '#3e2723'; ctx.lineWidth = 3.5;
-    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-6 + i * 2, -16); ctx.quadraticCurveTo(-14 - i * 2, -4, -10 - i * 3, 6 + Math.sin(dist * .1 + i) * 2); ctx.stroke(); }
-    // head
-    ctx.fillStyle = '#8d5524'; ctx.beginPath(); ctx.arc(2, -14, 10, 0, 7); ctx.fill();
-    // sunglasses + smile
-    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.roundRect(1, -18, 12, 5, 2); ctx.fill();
-    ctx.strokeStyle = '#2b1608'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(7, -10, 3.5, .2, Math.PI - .5); ctx.stroke();
-    // rasta tam
-    const hat = [['#43a047', -23, 9], ['#fdd835', -27, 8], ['#e53935', -30, 6]];
-    for (const [c, y, ry] of hat) { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(-1, y, 14, ry, -.15, Math.PI, 0); ctx.fill(); }
+    drawChar(ctx, char, sw, dist);
     ctx.restore();
   }
+
+  // Characters are parodies "in the style of", never named after real people.
+  function drawChar(c, id, sw = 3, ph = 0) {
+    // jetpack: two rockets
+    for (const ox of [-24, -15]) {
+      c.fillStyle = '#8d99a6'; c.beginPath(); c.roundRect(ox, -6, 9, 22, 4); c.fill();
+      c.fillStyle = '#e53935'; c.fillRect(ox, -2, 9, 3);
+      c.fillStyle = '#fdd835'; c.fillRect(ox, 1, 9, 3);
+      c.fillStyle = '#43a047'; c.fillRect(ox, 4, 9, 3);
+      c.fillStyle = '#555'; c.fillRect(ox + 1, 16, 7, 3);
+    }
+    // legs
+    c.strokeStyle = id === 'popstar' ? '#111' : '#3b2a1a'; c.lineWidth = 5; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-3, 16); c.lineTo(-3 + sw, 28); c.moveTo(4, 16); c.lineTo(4 - sw, 28); c.stroke();
+    if (id === 'popstar') {
+      // platinum hair behind the head
+      c.fillStyle = '#fff6c2'; c.beginPath(); c.ellipse(0, -11, 14, 15, 0, 0, 7); c.fill();
+      // sparkly dress
+      const g = c.createLinearGradient(-9, -4, 11, 18); g.addColorStop(0, '#f8bbd0'); g.addColorStop(.5, '#ffffff'); g.addColorStop(1, '#b0bec5');
+      c.fillStyle = g; c.beginPath(); c.moveTo(-7, -4); c.lineTo(9, -4); c.lineTo(14, 18); c.lineTo(-12, 18); c.fill();
+      c.fillStyle = '#fff'; for (let i = 0; i < 4; i++) c.fillRect(-6 + ((i * 7 + ph * .3) % 16), 2 + (i * 5) % 14, 2, 2);
+      c.fillStyle = '#f5cba7'; c.beginPath(); c.arc(2, -14, 10, 0, 7); c.fill();
+      // fringe
+      c.fillStyle = '#fff6c2'; c.beginPath(); c.ellipse(1, -21, 11, 5, -.1, Math.PI, 0); c.fill();
+      // giant white shades + red lips
+      c.fillStyle = '#fff'; c.beginPath(); c.roundRect(-1, -19, 16, 7, 3); c.fill();
+      c.fillStyle = '#111'; c.fillRect(1, -17, 5, 3); c.fillRect(8, -17, 5, 3);
+      c.fillStyle = '#d50000'; c.beginPath(); c.ellipse(7, -8, 3, 1.6, 0, 0, 7); c.fill();
+      // iconic hair bow
+      c.fillStyle = '#fff6c2'; c.strokeStyle = '#e6d78a'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(1, -26); c.lineTo(-11, -34); c.lineTo(-10, -22); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(1, -26); c.lineTo(13, -34); c.lineTo(12, -22); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.arc(1, -27, 3.5, 0, 7); c.fill(); c.stroke();
+    } else if (id === 'cumenda') {
+      // christmas sweater
+      c.fillStyle = '#c62828'; c.beginPath(); c.roundRect(-11, -4, 24, 23, 7); c.fill();
+      c.fillStyle = '#fff'; c.fillRect(-11, 4, 24, 3);
+      for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(-6 + i * 7, 12, 1.6, 0, 7); c.fill(); }
+      // round face, rosy cheeks, big grin
+      c.fillStyle = '#f2b98f'; c.beginPath(); c.arc(2, -14, 11, 0, 7); c.fill();
+      c.fillStyle = '#ef9a9a'; c.beginPath(); c.arc(9, -11, 2.5, 0, 7); c.fill();
+      c.fillStyle = '#111'; c.beginPath(); c.arc(5, -17, 1.4, 0, 7); c.arc(10, -17, 1.4, 0, 7); c.fill();
+      c.strokeStyle = '#6d4c41'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(3, -20); c.lineTo(7, -21); c.moveTo(9, -21); c.lineTo(12, -20); c.stroke();
+      c.fillStyle = '#5d1a1a'; c.beginPath(); c.arc(7, -11, 4, 0, Math.PI); c.fill();
+      // thinning hair on the sides
+      c.strokeStyle = '#8d7b6a'; c.lineWidth = 3; c.beginPath(); c.arc(1, -14, 10, Math.PI * .75, Math.PI * 1.15); c.stroke();
+      // santa hat (cinepanettone vibes)
+      c.fillStyle = '#d32f2f'; c.beginPath(); c.moveTo(-9, -22); c.quadraticCurveTo(0, -42, 16, -34); c.lineTo(13, -22); c.fill();
+      c.fillStyle = '#fff'; c.beginPath(); c.roundRect(-10, -25, 24, 5, 2.5); c.fill();
+      c.beginPath(); c.arc(16, -34, 3.5, 0, 7); c.fill();
+    } else {
+      // body
+      c.fillStyle = '#2e7d32'; c.beginPath(); c.roundRect(-9, -4, 20, 22, 6); c.fill();
+      c.fillStyle = '#fdd835'; c.fillRect(-9, 5, 20, 3);
+      // dreads
+      c.strokeStyle = '#3e2723'; c.lineWidth = 3.5;
+      for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(-6 + i * 2, -16); c.quadraticCurveTo(-14 - i * 2, -4, -10 - i * 3, 6 + Math.sin(ph * .1 + i) * 2); c.stroke(); }
+      // head
+      c.fillStyle = '#8d5524'; c.beginPath(); c.arc(2, -14, 10, 0, 7); c.fill();
+      // sunglasses + smile
+      c.fillStyle = '#111'; c.beginPath(); c.roundRect(1, -18, 12, 5, 2); c.fill();
+      c.strokeStyle = '#2b1608'; c.lineWidth = 1.5; c.beginPath(); c.arc(7, -10, 3.5, .2, Math.PI - .5); c.stroke();
+      // rasta tam
+      const hat = [['#43a047', -23, 9], ['#fdd835', -27, 8], ['#e53935', -30, 6]];
+      for (const [col, y, ry] of hat) { c.fillStyle = col; c.beginPath(); c.ellipse(-1, y, 14, ry, -.15, Math.PI, 0); c.fill(); }
+    }
+  }
+
+  function preview(canvas, id) {
+    const c = canvas.getContext('2d'), s = canvas.width / 80;
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    c.save(); c.translate(canvas.width / 2 + 4 * s, canvas.height * .58); c.scale(s * 1.4, s * 1.4); drawChar(c, id); c.restore();
+  }
+  function setChar(id) { char = id; draw(); }
 
   function draw() {
     if (!W) return;
@@ -246,5 +296,5 @@ const Game = (() => {
     if (p) drawPlayer();
   }
 
-  return { init, start, pause, resume, resize };
+  return { init, start, pause, resume, resize, preview, setChar };
 })();

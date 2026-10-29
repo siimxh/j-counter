@@ -1,6 +1,6 @@
 // ---------- state ----------
 const KEY = 'canne-counter-v1';
-const DEF = { log: [], seeds: 0, skins: ['classic'], skin: 'classic', lastSpin: '', best: 0, ach: {}, goal: 5, price: 0, pauseClaim: 0, created: Date.now(), games: 0 };
+const DEF = { log: [], seeds: 0, skins: ['classic'], skin: 'classic', chars: ['rasta'], char: 'rasta', lastSpin: '', best: 0, ach: {}, goal: 5, price: 0, pauseClaim: 0, created: Date.now(), games: 0 };
 let S = load();
 function load() {
   try { return { ...DEF, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { return { ...DEF }; }
@@ -215,6 +215,32 @@ function renderShop() {
     return `<div class="skin ${on ? 'on' : ''}"><div class="prev">${jointSVG(id)}</div><b>${s.name}</b>${btn}</div>`;
   }).join('');
 }
+// ---------- rewards: game characters ----------
+const CHARS = {
+  rasta: { name: 'Rastaman', price: 0 },
+  popstar: { name: 'Popstar Mostruosa', price: 400 },
+  cumenda: { name: 'Il Cumenda di Natale', price: 400 },
+};
+$('#charShop').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const id = b.dataset.id, ch = CHARS[id];
+  if (!S.chars.includes(id)) {
+    if (S.seeds < ch.price) return;
+    S.seeds -= ch.price; S.chars.push(id);
+    toast(`🚀 Nuovo pilota: <b>${ch.name}</b>!`);
+  }
+  S.char = id; save(); Game.setChar(id); render();
+});
+function renderChars() {
+  $('#charShop').innerHTML = Object.entries(CHARS).map(([id, ch]) => {
+    const own = S.chars.includes(id), on = S.char === id;
+    const btn = on ? '<button disabled>In uso</button>'
+      : own ? `<button data-id="${id}">Usa</button>`
+      : `<button class="buy" data-id="${id}" ${S.seeds < ch.price ? 'disabled' : ''}>${ch.price} 🌱</button>`;
+    return `<div class="skin ${on ? 'on' : ''}"><canvas class="char-prev" data-c="${id}" width="160" height="140"></canvas><b>${ch.name}</b>${btn}</div>`;
+  }).join('');
+  document.querySelectorAll('.char-prev').forEach(c => Game.preview(c, c.dataset.c));
+}
 function renderJoint() { $('#jointWrap').innerHTML = jointSVG(S.skin); }
 
 // ---------- game ----------
@@ -233,6 +259,7 @@ Game.init($('#game'), {
     addSeeds(reward); checkAch();
   },
 });
+Game.setChar(S.char);
 $('#goBest').textContent = S.best ? 'Record: ' + S.best + ' m' : '';
 $('#playBtn').addEventListener('click', () => { $('#gameOverlay').classList.add('hide'); Game.start(); });
 
@@ -290,7 +317,7 @@ function render() {
   $('#spinBtn').textContent = sp ? 'Torna domani 🌙' : 'Gira!';
   $('#achList').innerHTML = ACH.map(a => `<div class="${S.ach[a.id] ? '' : 'lock'}"><span>${a.i}</span><p style="margin:0"><b>${a.n}</b><small>${a.d}</small></p></div>`).join('');
   $('#goalIn').value = S.goal; $('#priceIn').value = S.price || '';
-  renderShop(); renderStats(); tick();
+  renderShop(); renderChars(); renderStats(); tick();
 }
 function tick() {
   const ms = pauseMs(), s = Math.floor(ms / 1000);

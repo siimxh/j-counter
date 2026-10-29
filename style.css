@@ -127,6 +127,7 @@ main { position: relative; z-index: 1; padding: 0 16px calc(var(--tab-h) + env(s
 .skin.on { border-color: var(--yel); }
 .skin .prev { transform: rotate(-12deg); margin: 4px 6px 10px; }
 .skin .prev svg { width: 100%; overflow: visible; }
+.char-prev { width: 100%; max-width: 120px; display: block; margin: 0 auto 4px; }
 .skin b { display: block; font-size: 14px; }
 .skin button { margin-top: 6px; border-radius: 99px; border: 0; padding: 6px 12px; font-weight: 900; background: var(--grn); color: #fff; font-size: 13px; }
 .skin button.buy { background: var(--yel); color: #1c2a12; }
