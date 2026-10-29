@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Canne Counter</title>
+<meta name="theme-color" content="#0f1a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Canne">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="bgLeaves" aria-hidden="true"></div>
+<div class="rasta-bar"><i></i><i></i><i></i></div>
+
+<header class="top">
+  <h1>CANNE<span>COUNTER</span></h1>
+  <div class="seeds" id="seedChip">🌱 <b id="seedCount">0</b></div>
+</header>
+
+<main>
+  <!-- CONTA -->
+  <section class="view active" id="v-count">
+    <div class="today-label">Oggi</div>
+    <div class="big-count" id="todayCount">0</div>
+    <div class="limit">
+      <div class="limit-bar"><div id="limitFill"></div></div>
+      <div class="limit-txt" id="limitTxt">0 / 5 limite giornaliero</div>
+    </div>
+
+    <button id="jointBtn" aria-label="Aggiungi una canna">
+      <div class="joint-wrap" id="jointWrap"></div>
+      <div class="tap-hint">TAP</div>
+    </button>
+
+    <div class="vibe" id="vibe">One love, una canna alla volta 🙏</div>
+
+    <div class="mini-stats">
+      <div><b id="weekCount">0</b><small>settimana</small></div>
+      <div><b id="totalCount">0</b><small>totale</small></div>
+      <div><b id="sinceLast">—</b><small>dall'ultima</small></div>
+    </div>
+    <button class="ghost" id="undoBtn">↶ Annulla ultima</button>
+  </section>
+
+  <!-- PREMI -->
+  <section class="view" id="v-rewards">
+    <div class="card">
+      <h2>☯ Bonus Pausa</h2>
+      <p class="muted">Ogni ora senza canne ti regala <b>2 semi</b>. Più stai in pausa, più guadagni.</p>
+      <div class="pause-timer" id="pauseTimer">00:00:00</div>
+      <button class="btn" id="claimBtn">Riscuoti</button>
+    </div>
+
+    <div class="card">
+      <h2>🎡 Ruota di Jah</h2>
+      <p class="muted">Un giro gratis al giorno.</p>
+      <div class="wheel-box">
+        <div class="wheel-pointer">▼</div>
+        <svg id="wheel" viewBox="-110 -110 220 220"></svg>
+      </div>
+      <button class="btn" id="spinBtn">Gira!</button>
+    </div>
+
+    <div class="card">
+      <h2>🛍 Negozio Cartine</h2>
+      <p class="muted">Spendi i semi per nuove skin della canna.</p>
+      <div class="shop" id="shop"></div>
+    </div>
+
+    <div class="card">
+      <h2>🏆 Trofei</h2>
+      <div class="ach" id="achList"></div>
+    </div>
+  </section>
+
+  <!-- GIOCO -->
+  <section class="view" id="v-game">
+    <div class="game-wrap">
+      <canvas id="game"></canvas>
+      <div class="game-hud"><span id="hudDist">0 m</span><span id="hudLeaves">🍃 0</span></div>
+      <div class="game-overlay" id="gameOverlay">
+        <h2 id="goTitle">JAH-PACK RIDE</h2>
+        <p id="goText">Tieni premuto per accendere lo zaino a razzo.<br>Evita i laser, raccogli le foglie!</p>
+        <p class="muted" id="goBest"></p>
+        <button class="btn" id="playBtn">GIOCA</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="view" id="v-stats">
+    <div class="card">
+      <h2>📊 Ultimi 7 giorni</h2>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="card grid-stats" id="gridStats"></div>
+    <div class="card">
+      <h2>⚙ Impostazioni</h2>
+      <label class="field">Limite giornaliero
+        <input type="number" id="goalIn" min="1" max="50" inputmode="numeric">
+      </label>
+      <label class="field">Costo per canna (€)
+        <input type="number" id="priceIn" min="0" step="0.5" inputmode="decimal">
+      </label>
+      <button class="ghost danger" id="resetBtn">Azzera tutto</button>
+    </div>
+    <p class="foot">Fatto con amore. Fuma responsabile: le pause ti fanno vincere 🌱</p>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-v="v-count" class="active"><span>🌿</span>Conta</button>
+  <button data-v="v-rewards"><span>🎁</span>Premi</button>
+  <button data-v="v-game"><span>🚀</span>Gioco</button>
+  <button data-v="v-stats"><span>📊</span>Stats</button>
+</nav>
+
+<div id="toasts"></div>
+<div id="fx"></div>
+
+<script src="leaf.js"></script>
+<script src="game.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
