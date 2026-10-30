@@ -1,20 +1,20 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Canne Counter</title>
+<title>Joint Counter</title>
 <meta name="theme-color" content="#0f1a12">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Canne">
+<meta name="apple-mobile-web-app-title" content="Joints">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,88 +22,92 @@
 <div class="rasta-bar"><i></i><i></i><i></i></div>
 
 <header class="top">
-  <h1>CANNE<span>COUNTER</span></h1>
-  <div class="seeds" id="seedChip">🌱 <b id="seedCount">0</b></div>
+  <h1>JOINT<span>COUNTER</span></h1>
+  <div class="chips">
+    <div class="chip lvl" id="lvlChip">LV 1</div>
+    <div class="chip seeds" id="seedChip">🌱 <b id="seedCount">0</b></div>
+  </div>
 </header>
 
 <main>
-  <!-- CONTA -->
+  <!-- COUNT -->
   <section class="view active" id="v-count">
-    <div class="today-label">Oggi</div>
+    <div class="today-label">Today</div>
     <div class="big-count" id="todayCount">0</div>
     <div class="limit">
       <div class="limit-bar"><div id="limitFill"></div></div>
-      <div class="limit-txt" id="limitTxt">0 / 5 limite giornaliero</div>
+      <div class="limit-txt" id="limitTxt">0 / 5 daily limit</div>
     </div>
 
-    <button id="jointBtn" aria-label="Aggiungi una canna">
+    <button id="jointBtn" aria-label="Log a joint">
       <div class="joint-wrap" id="jointWrap"></div>
       <div class="tap-hint">TAP</div>
     </button>
 
-    <div class="vibe" id="vibe">One love, una canna alla volta 🙏</div>
+    <div class="vibe" id="vibe">One love, one joint at a time 🙏</div>
 
     <div class="mini-stats">
-      <div><b id="weekCount">0</b><small>settimana</small></div>
-      <div><b id="totalCount">0</b><small>totale</small></div>
-      <div><b id="sinceLast">—</b><small>dall'ultima</small></div>
+      <div><b id="weekCount">0</b><small>this week</small></div>
+      <div><b id="totalCount">0</b><small>total</small></div>
+      <div><b id="sinceLast">—</b><small>since last</small></div>
     </div>
-    <button class="ghost" id="undoBtn">↶ Annulla ultima</button>
+    <button class="ghost" id="undoBtn">↶ Undo last</button>
   </section>
 
-  <!-- PREMI -->
+  <!-- REWARDS -->
   <section class="view" id="v-rewards">
-    <div class="card">
-      <h2>☯ Bonus Pausa</h2>
-      <p class="muted">Ogni ora senza canne ti regala <b>2 semi</b>. Più stai in pausa, più guadagni.</p>
-      <div class="pause-timer" id="pauseTimer">00:00:00</div>
-      <button class="btn" id="claimBtn">Riscuoti</button>
+    <div class="card level-card">
+      <div class="lvl-badge"><small>LEVEL</small><b id="lvlNum">1</b></div>
+      <div class="lvl-bar"><div id="lvlFill"></div></div>
+      <div class="muted" id="lvlTxt"></div>
+      <p class="muted">Earn XP by playing, taking breaks, spinning and winning trophies.</p>
+      <ul class="lvl-next" id="lvlNext"></ul>
     </div>
 
     <div class="card">
-      <h2>🎡 Ruota di Jah</h2>
-      <p class="muted">Un giro gratis al giorno.</p>
+      <h2>☯ Break Bonus</h2>
+      <p class="muted">Every hour without a joint gives you <b>2 seeds</b> and <b>10 XP</b>.</p>
+      <div class="pause-timer" id="pauseTimer">00:00:00</div>
+      <button class="btn" id="claimBtn">Claim</button>
+    </div>
+
+    <div class="card">
+      <h2>🎡 Wheel of Jah</h2>
+      <p class="muted">One free spin a day.</p>
       <div class="wheel-box">
         <div class="wheel-pointer">▼</div>
         <svg id="wheel" viewBox="-110 -110 220 220"></svg>
       </div>
-      <button class="btn" id="spinBtn">Gira!</button>
+      <button class="btn" id="spinBtn">Spin!</button>
     </div>
 
     <div class="card">
-      <h2>🛍 Negozio Cartine</h2>
-      <p class="muted">Spendi i semi per nuove skin della canna.</p>
-      <div class="shop" id="shop"></div>
-    </div>
-
-    <div class="card">
-      <h2>🚀 Piloti Jah-Pack</h2>
-      <p class="muted">Sblocca nuovi personaggi per il gioco.</p>
-      <div class="shop" id="charShop"></div>
-    </div>
-
-    <div class="card">
-      <h2>🌄 Sfondi Jah-Pack</h2>
-      <p class="muted">Cambia il mondo in cui voli.</p>
-      <div class="shop" id="themeShop"></div>
-    </div>
-
-    <div class="card">
-      <h2>🏆 Trofei</h2>
+      <h2>🏆 Trophies</h2>
       <div class="ach" id="achList"></div>
     </div>
   </section>
 
-  <!-- GIOCO -->
+  <!-- SHOP -->
+  <section class="view" id="v-shop">
+    <div class="seg">
+      <button data-cat="skins" class="active">Papers</button>
+      <button data-cat="chars">Pilots</button>
+      <button data-cat="themes">Worlds</button>
+      <button data-cat="trails">Trails</button>
+    </div>
+    <div class="shop" id="shopGrid"></div>
+  </section>
+
+  <!-- GAME -->
   <section class="view" id="v-game">
     <div class="game-wrap">
       <canvas id="game"></canvas>
       <div class="game-hud"><span id="hudDist">0 m</span><span id="hudMult">x1</span><span id="hudLeaves">🍃 0</span></div>
       <div class="game-overlay" id="gameOverlay">
         <h2 id="goTitle">JAH-PACK RIDE</h2>
-        <p id="goText">Tieni premuto per accendere lo zaino a razzo.<br>Evita i laser, raccogli le foglie!<br>Più resti in vita, più sale il moltiplicatore 🔥</p>
+        <p id="goText">Hold to fire up your rocket backpack.<br>Dodge the lasers, grab the leaves!<br>The longer you survive, the bigger the multiplier 🔥</p>
         <p class="muted" id="goBest"></p>
-        <button class="btn" id="playBtn">GIOCA</button>
+        <button class="btn" id="playBtn">PLAY</button>
       </div>
     </div>
   </section>
@@ -111,30 +115,41 @@
   <!-- STATS -->
   <section class="view" id="v-stats">
     <div class="card">
-      <h2>📊 Ultimi 7 giorni</h2>
+      <h2>📊 Last 7 days</h2>
       <div class="bars" id="bars"></div>
     </div>
     <div class="card grid-stats" id="gridStats"></div>
     <div class="card">
-      <h2>⚙ Impostazioni</h2>
-      <label class="field">Limite giornaliero
+      <h2>⚙ Settings</h2>
+      <label class="field">Daily limit
         <input type="number" id="goalIn" min="1" max="50" inputmode="numeric">
       </label>
-      <label class="field">Costo per canna (€)
+      <label class="field">Cost per joint (€)
         <input type="number" id="priceIn" min="0" step="0.5" inputmode="decimal">
       </label>
-      <button class="ghost danger" id="resetBtn">Azzera tutto</button>
+      <button class="ghost danger" id="resetBtn">Reset everything</button>
     </div>
-    <p class="foot">Fatto con amore. Fuma responsabile: le pause ti fanno vincere 🌱</p>
+    <p class="foot">Made with love. Smoke responsibly: breaks make you win 🌱</p>
   </section>
 </main>
 
 <nav class="tabs">
-  <button data-v="v-count" class="active"><span>🌿</span>Conta</button>
-  <button data-v="v-rewards"><span>🎁</span>Premi</button>
-  <button data-v="v-game"><span>🚀</span>Gioco</button>
+  <button data-v="v-count" class="active"><span>🌿</span>Count</button>
+  <button data-v="v-rewards"><span>🎁</span>Rewards</button>
+  <button data-v="v-shop"><span>🛍</span>Shop</button>
+  <button data-v="v-game"><span>🚀</span>Play</button>
   <button data-v="v-stats"><span>📊</span>Stats</button>
 </nav>
+
+<div class="levelup" id="levelUp">
+  <div class="lu-card">
+    <div class="lu-burst"></div>
+    <h2 id="luLevel">LEVEL 2</h2>
+    <p class="muted">New stuff unlocked:</p>
+    <ul id="luList"></ul>
+    <button class="btn" id="luClose">IRIE!</button>
+  </div>
+</div>
 
 <div id="toasts"></div>
 <div id="fx"></div>

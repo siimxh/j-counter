@@ -77,7 +77,7 @@ const Themes = (() => {
       },
     },
     tropical: {
-      name: 'Tropicale', price: 250, ambient: 'birds',
+      name: 'Tropical', price: 250, ambient: 'birds',
       hill: '#d9a55b', ceil: '#5b2a4a', stripes: ['#00bcd4', '#ffeb3b', '#ff7043'], ground: '#e6c27a', dash: '#d4a95f',
       sky(c, W, H, fy) {
         c.fillStyle = grad(c, H, ['#4a2c6d', '#ff6f61', '#ffb36b', '#ffd98a']); c.fillRect(0, 0, W, H);
@@ -94,7 +94,7 @@ const Themes = (() => {
       },
     },
     xmas: {
-      name: 'Natale', price: 300, ambient: 'snow', hillCap: true,
+      name: 'Christmas', price: 300, ambient: 'snow', hillCap: true,
       hill: '#cfdcf0', ceil: '#06102a', stripes: ['#c62828', '#ffffff', '#2e7d32'], ground: '#f2f7ff', dash: '#d5e2f3',
       sky(c, W, H, fy) {
         c.fillStyle = grad(c, H, ['#050d24', '#13285a', '#2b4a86']); c.fillRect(0, 0, W, H);
@@ -147,6 +147,68 @@ const Themes = (() => {
         for (let i = 0; i < 5; i++) {
           c.fillStyle = '#4a4458'; const x = r() * TILE, y = 60 + r() * fy * .6, s = 8 + r() * 18;
           c.beginPath(); c.ellipse(x, y, s, s * .8, r() * 3, 0, 7); c.fill();
+        }
+      },
+    },
+    city: {
+      name: 'Night City', lvl: 5, ambient: 'rain',
+      hill: '#140b26', ceil: '#05030c', stripes: ['#ff2fd6', '#2ff3ff', '#ff2fd6'], ground: '#24232b', dash: '#e8c84a',
+      sky(c, W, H, fy) {
+        c.fillStyle = grad(c, H, ['#07051a', '#1d0f3d', '#4a1c5c']); c.fillRect(0, 0, W, H);
+        stars(c, W, H, 30, fy * .35, 31);
+        moon(c, W * .25, fy * .2, 22, '#e1f5fe', 'rgba(150,220,255,.2)');
+      },
+      far(c, H, fy) {
+        const r = seeded(37);
+        let x = 0;
+        while (x < TILE) {
+          const w = 50 + r() * 50, h = 120 + r() * fy * .45;
+          c.fillStyle = '#120a24'; c.fillRect(x, fy - h, w - 6, h);
+          for (let wy = fy - h + 10; wy < fy - 12; wy += 14) for (let wx = x + 6; wx < x + w - 14; wx += 11)
+            if (r() < .35) { c.fillStyle = r() < .2 ? '#ff9ff3' : '#ffe082'; c.fillRect(wx, wy, 5, 7); }
+          if (r() < .3) { c.fillStyle = r() < .5 ? '#ff2fd6' : '#2ff3ff'; c.fillRect(x + 6, fy - h - 6, w - 18, 4); }
+          x += w;
+        }
+      },
+    },
+    jungle: {
+      name: 'Jungle', lvl: 8, ambient: 'fireflies',
+      hill: '#0c3b1c', ceil: '#04170a', stripes: ['#2e7d32', '#8bc34a', '#2e7d32'], ground: '#3b2a1a', dash: '#4e3a22',
+      sky(c, W, H, fy) {
+        c.fillStyle = grad(c, H, ['#0b2e1f', '#1b5e3a', '#2f7d4f']); c.fillRect(0, 0, W, H);
+        c.fillStyle = 'rgba(255,255,200,.06)';
+        for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(W * (.1 + i * .25), 0); c.lineTo(W * (.2 + i * .25), 0); c.lineTo(W * (.35 + i * .25), fy); c.lineTo(W * (.15 + i * .25), fy); c.fill(); }
+      },
+      far(c, H, fy) {
+        const r = seeded(41);
+        for (let i = 0; i < 4; i++) {
+          const x = 40 + i * 150 + r() * 40;
+          c.fillStyle = '#123d22'; c.fillRect(x, 0, 18 + r() * 10, fy);
+        }
+        c.strokeStyle = '#1f6b33'; c.lineWidth = 3;
+        for (let i = 0; i < 7; i++) {
+          const x = r() * TILE, len = 60 + r() * fy * .4;
+          c.beginPath(); c.moveTo(x, 0); c.quadraticCurveTo(x + 20, len / 2, x, len); c.stroke();
+          c.fillStyle = '#2e8b44'; for (let k = 20; k < len; k += 26) { c.beginPath(); c.ellipse(x + 6, k, 7, 3.5, .6, 0, 7); c.fill(); }
+        }
+        for (let i = 0; i < 5; i++) Leaf.draw(c, r() * TILE, fy - 10 - r() * 40, 110 + r() * 60, (r() - .5) * .6, '#164d2a');
+      },
+    },
+    trippy: {
+      name: 'Trippy', lvl: 12, ambient: 'fireflies', fireflyHue: true,
+      hill: '#5e1d7a', ceil: '#14002b', stripes: ['#ff1744', '#ffea00', '#00e676'], ground: '#3d1257', dash: '#ff4081',
+      sky(c, W, H, fy) {
+        const cx = W * .5, cy = fy * .55;
+        for (let i = 14; i >= 0; i--) { c.fillStyle = `hsl(${i * 26 + 260},85%,${30 + i * 2}%)`; c.beginPath(); c.arc(cx, cy, i * W * .09 + 20, 0, 7); c.fill(); }
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, 0, W, H);
+      },
+      far(c, H, fy) {
+        const r = seeded(43);
+        for (let i = 0; i < 5; i++) {
+          const x = 50 + i * 120 + r() * 30, h = 50 + r() * 70, w = 30 + r() * 30;
+          c.fillStyle = '#f5e6c8'; c.fillRect(x - 6, fy - h, 12, h);
+          c.fillStyle = r() < .5 ? '#e53935' : '#7c4dff'; c.beginPath(); c.ellipse(x, fy - h, w, w * .65, 0, Math.PI, 0); c.fill();
+          c.fillStyle = '#fff'; for (let k = 0; k < 4; k++) { c.beginPath(); c.arc(x + (r() - .5) * w * 1.3, fy - h - r() * w * .5, 3 + r() * 3, 0, 7); c.fill(); }
         }
       },
     },

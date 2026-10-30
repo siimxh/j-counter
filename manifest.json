@@ -1,6 +1,6 @@
 {
-  "name": "Canne Counter",
-  "short_name": "Canne",
+  "name": "Joint Counter",
+  "short_name": "Joints",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

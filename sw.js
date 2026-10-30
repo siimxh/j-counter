@@ -1,4 +1,4 @@
-const CACHE = 'canne-v5';
+const CACHE = 'canne-v6';
 const FILES = ['./', 'index.html', 'style.css', 'leaf.js', 'themes.js', 'level.js', 'game.js', 'app.js', 'manifest.json', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
