@@ -112,7 +112,7 @@ main { position: relative; z-index: 1; padding: 0 16px calc(var(--tab-h) + env(s
 .btn:disabled { filter: grayscale(1); opacity: .5; }
 
 /* cards */
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin: 12px 0; text-align: center; backdrop-filter: blur(4px); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin: 12px 0; text-align: center; }
 .card h2 { font-family: 'Bungee'; font-weight: 400; font-size: 18px; margin: 0 0 6px; }
 .muted { color: var(--muted); font-size: 14px; margin: 4px 0 8px; }
 .pause-timer { font-family: 'Bungee'; font-size: 40px; color: var(--grn); margin: 6px 0; }
@@ -127,6 +127,9 @@ main { position: relative; z-index: 1; padding: 0 16px calc(var(--tab-h) + env(s
 .skin.on { border-color: var(--yel); }
 .skin .prev { transform: rotate(-12deg); margin: 4px 6px 10px; }
 .skin .prev svg { width: 100%; overflow: visible; }
+.theme-prev { width: 100%; display: block; border-radius: 10px; margin-bottom: 6px; }
+body.in-game #bgLeaves { display: none; }
+#game { -webkit-touch-callout: none; -webkit-user-select: none; }
 .char-prev { width: 100%; max-width: 120px; display: block; margin: 0 auto 4px; }
 .skin b { display: block; font-size: 14px; }
 .skin button { margin-top: 6px; border-radius: 99px; border: 0; padding: 6px 12px; font-weight: 900; background: var(--grn); color: #fff; font-size: 13px; }
@@ -170,7 +173,7 @@ nav.tabs {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
   display: grid; grid-template-columns: repeat(4, 1fr);
   height: calc(var(--tab-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
-  background: rgba(10, 20, 12, .92); border-top: 1px solid var(--line); backdrop-filter: blur(10px);
+  background: #0b160e; border-top: 1px solid var(--line);
 }
 nav.tabs button { background: none; border: 0; font-size: 12px; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 nav.tabs button span { font-size: 22px; transition: transform .2s; }

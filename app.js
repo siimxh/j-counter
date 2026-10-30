@@ -1,6 +1,6 @@
 // ---------- state ----------
 const KEY = 'canne-counter-v1';
-const DEF = { log: [], seeds: 0, skins: ['classic'], skin: 'classic', chars: ['rasta'], char: 'rasta', lastSpin: '', best: 0, ach: {}, goal: 5, price: 0, pauseClaim: 0, created: Date.now(), games: 0 };
+const DEF = { log: [], seeds: 0, skins: ['classic'], skin: 'classic', chars: ['rasta'], char: 'rasta', themes: ['rasta'], theme: 'rasta', lastSpin: '', best: 0, ach: {}, goal: 5, price: 0, pauseClaim: 0, created: Date.now(), games: 0 };
 let S = load();
 function load() {
   try { return { ...DEF, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { return { ...DEF }; }
@@ -222,6 +222,11 @@ const CHARS = {
   rasta: { name: 'Rastaman', price: 0 },
   popstar: { name: 'Popstar Mostruosa', price: 400 },
   cumenda: { name: 'Il Cumenda di Natale', price: 400 },
+  hippie: { name: 'Figlio dei Fiori', price: 250 },
+  cat: { name: 'Gatto Fattone', price: 300 },
+  nonna: { name: 'Nonna Rasta', price: 350 },
+  alien: { name: 'Alieno Verde', price: 450 },
+  skull: { name: 'Scheletro Chill', price: 500 },
 };
 $('#charShop').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -232,6 +237,7 @@ $('#charShop').addEventListener('click', e => {
     toast(`🚀 Nuovo pilota: <b>${ch.name}</b>!`);
   }
   S.char = id; save(); Game.setChar(id); render();
+  renderThemes();
 });
 function renderChars() {
   $('#charShop').innerHTML = Object.entries(CHARS).map(([id, ch]) => {
@@ -242,6 +248,27 @@ function renderChars() {
     return `<div class="skin ${on ? 'on' : ''}"><canvas class="char-prev" data-c="${id}" width="160" height="140"></canvas><b>${ch.name}</b>${btn}</div>`;
   }).join('');
   document.querySelectorAll('.char-prev').forEach(c => Game.preview(c, c.dataset.c));
+}
+// ---------- rewards: game backgrounds ----------
+$('#themeShop').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const id = b.dataset.id, th = Themes.T[id];
+  if (!S.themes.includes(id)) {
+    if (S.seeds < th.price) return;
+    S.seeds -= th.price; S.themes.push(id);
+    toast(`🌄 Nuovo sfondo: <b>${th.name}</b>!`);
+  }
+  S.theme = id; save(); Game.setTheme(id); render();
+});
+function renderThemes() {
+  $('#themeShop').innerHTML = Object.entries(Themes.T).map(([id, th]) => {
+    const own = S.themes.includes(id), on = S.theme === id;
+    const btn = on ? '<button disabled>In uso</button>'
+      : own ? `<button data-id="${id}">Usa</button>`
+      : `<button class="buy" data-id="${id}" ${S.seeds < th.price ? 'disabled' : ''}>${th.price} 🌱</button>`;
+    return `<div class="skin ${on ? 'on' : ''}"><canvas class="theme-prev" data-t="${id}" width="300" height="180"></canvas><b>${th.name}</b>${btn}</div>`;
+  }).join('');
+  document.querySelectorAll('.theme-prev').forEach(c => Game.previewTheme(c, c.dataset.t));
 }
 function renderJoint() { $('#jointWrap').innerHTML = jointSVG(S.skin); }
 
@@ -262,6 +289,7 @@ Game.init($('#game'), {
   },
 });
 Game.setChar(S.char);
+Game.setTheme(S.theme);
 $('#goBest').textContent = S.best ? 'Record: ' + S.best + ' m' : '';
 $('#playBtn').addEventListener('click', () => { $('#gameOverlay').classList.add('hide'); Game.start(); });
 
@@ -319,7 +347,7 @@ function render() {
   $('#spinBtn').textContent = sp ? 'Torna domani 🌙' : 'Gira!';
   $('#achList').innerHTML = ACH.map(a => `<div class="${S.ach[a.id] ? '' : 'lock'}"><span>${a.i}</span><p style="margin:0"><b>${a.n}</b><small>${a.d}</small></p></div>`).join('');
   $('#goalIn').value = S.goal; $('#priceIn').value = S.price || '';
-  renderShop(); renderChars(); renderStats(); tick();
+  renderShop(); renderChars(); renderThemes(); renderStats(); tick();
 }
 function tick() {
   const ms = pauseMs(), s = Math.floor(ms / 1000);
@@ -335,6 +363,7 @@ setInterval(() => { tick(); if (ACH.some(a => !S.ach[a.id] && a.ok())) { checkAc
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('active', x === b));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === b.dataset.v));
+  document.body.classList.toggle('in-game', b.dataset.v === 'v-game');
   if (b.dataset.v === 'v-game') Game.resume(); else Game.pause();
   window.scrollTo(0, 0);
 }));

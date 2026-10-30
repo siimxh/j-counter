@@ -61,23 +61,26 @@ const Level = (() => {
   }
 
   // 3x5 pixel font for leaf writing
-  const FONT = { 4: ['101', '101', '111', '001', '001'], 2: ['111', '001', '111', '100', '111'], 0: ['111', '101', '101', '101', '111'] };
+  const FONT = {
+    4: ['101', '101', '111', '001', '001'], 2: ['111', '001', '111', '100', '111'], 0: ['111', '101', '101', '101', '111'],
+    J: ['111', '001', '001', '101', '111'], A: ['010', '101', '111', '101', '101'], H: ['101', '101', '111', '101', '101'],
+  };
 
   function create({ y0: Y0, y1: Y1, top: TOPY, floor: FLOORY, startX, rng = Math.random }) {
     const R = (a, b) => a + rng() * (b - a), pick = a => a[Math.floor(rng() * a.length)];
     const out = { obs: [], coins: [], missiles: [], x: startX };
     let prevW = [[Y0, Y1]], sinceCoins = 0;
-    const diff = () => Math.min(1, out.x / 50000);
-    const minFree = () => 62 - 22 * diff();
+    const diff = () => Math.min(1, out.x / 80000);
+    const minFree = () => 82 - 26 * diff();
     const vert = (a, b) => ({ y: (a + b) / 2, ang: PI / 2, len: b - a });
 
     // add one column of lasers; returns its centre x or null if it would be unfair
     function column(lasers, extraGap = 0) {
       const win = windows(lasers, Y0, Y1).filter(w => w[1] - w[0] >= minFree());
       if (!win.length || lasers.some(o => o.len < 40)) return null;
-      const hx = Math.max(...lasers.map(extentX));
+      const hx = Math.max(...lasers.map(o => extentX(o) + Math.abs(o.dx || 0)));
       const cx = out.x + speedAt(out.x) * (travelFrames(shift(prevW, win)) + 10) + 30 + extraGap + hx;
-      for (const o of lasers) out.obs.push({ ...o, x: cx });
+      for (const o of lasers) out.obs.push({ y: o.y, ang: o.ang, len: o.len, spin: o.spin, x: cx + (o.dx || 0) });
       prevW = win; out.x = cx + hx;
       return { cx, win };
     }
@@ -116,18 +119,44 @@ const Level = (() => {
         if (Math.abs(a - b) < 150) return null;
         return column([{ y: a, ang: 0, len }, { y: b, ang: 0, len: len * R(.6, 1) }]);
       },
-      slant() {
-        // two parallel diagonals: fly between or around them
-        const ang = pick([PI / 4, -PI / 4]), len = R(120, 180), y = R(Y0, Y1), off = R(150, 210);
-        return column([{ y, ang, len }, { y: y + (y < (Y0 + Y1) / 2 ? off : -off), ang, len }]);
+      corridor() {
+        // a run of gates whose hole drifts up and down
+        const n = 3 + Math.floor(rng() * 2), fw = minFree() + R(40, 70);
+        let w0 = R(Y0, Y1 - fw), ok = null;
+        for (let i = 0; i < n; i++) {
+          const top = w0 - HEAD - LASER, bot = w0 + fw + FEET + LASER, L = [];
+          if (top - TOPY > 40) L.push(vert(TOPY, top));
+          if (FLOORY - bot > 40) L.push(vert(bot, FLOORY));
+          const c = L.length && column(L);
+          if (!c) return ok;
+          ok = c; coin(c.cx, w0 + fw / 2);
+          w0 = Math.max(Y0, Math.min(Y1 - fw, w0 + R(-90, 90)));
+        }
+        return ok;
+      },
+      pillars() {
+        // short floating lasers one after another
+        const n = 2 + Math.floor(rng() * 2);
+        let ok = null;
+        for (let i = 0; i < n; i++) {
+          const len = R(80, 130), c = column([{ y: R(Y0 + 20, Y1 - 20), ang: PI / 2, len }]);
+          if (!c) return ok;
+          ok = c;
+        }
+        return ok;
+      },
+      chevron() {
+        // "<" or ">" made of two diagonals
+        const arm = R(110, 150), e = arm / Math.SQRT2 / 2, y = R(Y0, Y1), dir = pick([1, -1]);
+        return column([{ y: y - e, ang: -dir * PI / 4, len: arm }, { y: y + e, ang: dir * PI / 4, len: arm }]);
       },
       spinner() {
-        if (diff() < .08) return null;
-        const len = Math.min(170, (Y1 - Y0) * .45);
-        return column([{ y: R(Y0, Y1), ang: R(0, PI), len, spin: pick([-1, 1]) * R(.004, .008) }], 40);
+        if (diff() < .25) return null;
+        const len = Math.min(150, (Y1 - Y0) * .4);
+        return column([{ y: R(Y0, Y1), ang: R(0, PI), len, spin: pick([-1, 1]) * R(.003, .005) }], 60);
       },
     };
-    const OBST = [['single', 26], ['gate', 22], ['stairs', 14], ['double', 14], ['slant', 12], ['spinner', 12]];
+    const OBST = [['single', 18], ['gate', 18], ['corridor', 12], ['stairs', 10], ['double', 8], ['pillars', 12], ['chevron', 10], ['spinner', 8]];
 
     const COINS = {
       block() {
@@ -148,7 +177,7 @@ const Level = (() => {
       },
       text() {
         const y = R(Y0 + 10, Y1 - 5 * 24);
-        [4, 2, 0].forEach((ch, k) => FONT[ch].forEach((row, r) => [...row].forEach((v, c) => {
+        pick([[4, 2, 0], ['J', 'A', 'H']]).forEach((ch, k) => FONT[ch].forEach((row, r) => [...row].forEach((v, c) => {
           if (v === '1') coin(out.x + 40 + k * 4 * 24 + c * 24, y + r * 24);
         })));
         return [y, y + 5 * 24, 11 * 24];
@@ -160,6 +189,43 @@ const Level = (() => {
           coin(cx + 5.5 * 16 * Math.pow(Math.sin(t), 3) / 3, y - 5.5 * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 3);
         }
         return [y - 70, y + 70, 240];
+      },
+      zigzag() {
+        const y = R(Y0 + 70, Y1 - 70), n = 18;
+        for (let i = 0; i < n; i++) coin(out.x + 40 + i * 26, y + ((i % 8) < 4 ? (i % 4) : 4 - (i % 4)) * 30 - 60);
+        return [y - 60, y + 60, n * 26];
+      },
+      diamond() {
+        const y = R(Y0 + 90, Y1 - 90), cx = out.x + 140, r = 90;
+        for (let i = 0; i < 16; i++) {
+          const t = i / 16 * 4, k = t % 1, q = Math.floor(t);
+          const pts = [[0, -r], [r, 0], [0, r], [-r, 0], [0, -r]];
+          coin(cx + pts[q][0] + (pts[q + 1][0] - pts[q][0]) * k, y + pts[q][1] + (pts[q + 1][1] - pts[q][1]) * k);
+        }
+        coin(cx, y);
+        return [y - r, y + r, 2 * r + 60];
+      },
+      ring() {
+        const y = R(Y0 + 80, Y1 - 80), cx = out.x + 120, r = 75;
+        for (let i = 0; i < 16; i++) coin(cx + Math.cos(i / 16 * 2 * PI) * r, y + Math.sin(i / 16 * 2 * PI) * r);
+        coinRow(cx, y, 3);
+        return [y - r, y + r, 2 * r + 80];
+      },
+      leaf() {
+        // a big cannabis leaf drawn with leaves
+        const y = R(Y0 + 120, Y1 - 30), cx = out.x + 150;
+        for (const [a, s] of [[-100, .42], [-66, .66], [-33, .88], [0, 1], [33, .88], [66, .66], [100, .42]]) {
+          const r = (a - 90) * PI / 180, n = Math.round(5 * s);
+          for (let i = 1; i <= n; i++) coin(cx + Math.cos(r) * i * 24, y + Math.sin(r) * i * 24);
+        }
+        coin(cx, y); coin(cx, y + 24);
+        return [y - 125, y + 30, 300];
+      },
+      smile() {
+        const y = R(Y0 + 80, Y1 - 80), cx = out.x + 120;
+        for (let i = 0; i < 9; i++) { const t = PI * (.15 + .7 * i / 8); coin(cx + Math.cos(t) * 70, y + Math.sin(t) * 55); }
+        coin(cx - 30, y - 35); coin(cx + 30, y - 35);
+        return [y - 50, y + 60, 240];
       },
     };
 
