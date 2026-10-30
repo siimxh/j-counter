@@ -247,14 +247,14 @@ function renderJoint() { $('#jointWrap').innerHTML = jointSVG(S.skin); }
 
 // ---------- game ----------
 Game.init($('#game'), {
-  hud: { dist: $('#hudDist'), leaves: $('#hudLeaves') },
-  onOver(m, l) {
-    const reward = l + Math.floor(m / 100);
+  hud: { dist: $('#hudDist'), leaves: $('#hudLeaves'), mult: $('#hudMult') },
+  onOver(m, l, mult) {
+    const reward = Math.floor(l / 5) + Math.floor(m / 100);
     const rec = m > S.best;
     if (rec) S.best = m;
     S.games++;
     $('#goTitle').textContent = rec ? 'NUOVO RECORD!' : 'SCHIANTATO!';
-    $('#goText').innerHTML = `${m} m · ${l} foglie<br>Hai guadagnato <b>${reward} 🌱</b>`;
+    $('#goText').innerHTML = `${m} m · ${l} foglie · molt. x${mult}<br>Hai guadagnato <b>${reward} 🌱</b>`;
     $('#goBest').textContent = 'Record: ' + S.best + ' m';
     $('#playBtn').textContent = 'RIPROVA';
     $('#gameOverlay').classList.remove('hide');

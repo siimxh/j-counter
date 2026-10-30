@@ -1,10 +1,13 @@
 // JAH-PACK RIDE — a Jetpack Joyride-style runner where the rocket backpack spits joints.
 const Game = (() => {
-  let cv, ctx, W = 0, H = 0, raf = 0, last = 0;
+  let cv, ctx, W = 0, H = 0, raf = 0, last = 0, scale = 1;
   let state = 'idle', hold = false, onOver = () => {}, hud = {}, char = 'rasta';
-  let p, obs, coins, missiles, parts, bg, dist, speed, leaves, t;
+  let p, level, missiles, parts, bg, dist, speed, leaves, life, mult, banner;
   let leafSpr, leafSprBg;
-  const G = 0.42, THRUST = 0.95, TOP = 18, FLOOR_H = 42;
+  const G = Level.G, THRUST = Level.THRUST, TOP = 18, FLOOR_H = 42;
+  const VIEW_W = 480;          // minimum world width shown, so phones see far enough ahead
+  const MULT_EVERY = 900;      // frames alive (~15s) per +1 leaf multiplier
+  const MULT_MAX = 5;
   const rand = (a, b) => a + Math.random() * (b - a);
 
   function init(canvas, opts) {
@@ -27,21 +30,28 @@ const Game = (() => {
     const r = cv.getBoundingClientRect();
     if (!r.width) return;
     const dpr = Math.min(devicePixelRatio || 1, 2);
-    W = r.width; H = r.height;
-    cv.width = W * dpr; cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    if (state !== 'run') { if (p) p.x = W * .22; draw(); }
+    scale = Math.min(1, r.width / VIEW_W);
+    cv.width = r.width * dpr; cv.height = r.height * dpr;
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    if (state === 'run') return;
+    W = r.width / scale; H = r.height / scale;
+    if (p) p.x = W * .2;
+    draw();
   }
 
+  const laneTop = () => TOP + 34, laneBottom = () => H - FLOOR_H - 23;
+
   function reset() {
-    p = { x: W * .22, y: H / 2, vy: 0, r: 15 };
-    obs = []; coins = []; missiles = []; parts = [];
+    p = { x: W * .2, y: H / 2, vy: 0 };
+    level = Level.create({ y0: laneTop(), y1: laneBottom(), top: TOP + 4, floor: H - FLOOR_H - 4, startX: W * .9 });
+    missiles = []; parts = [];
     bg = Array.from({ length: 6 }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(0, 6), s: rand(.15, .4) }));
-    dist = 0; speed = 4.2; leaves = 0; t = { zap: 70, coin: 30, miss: 0 };
+    dist = 0; speed = Level.speedAt(0); leaves = 0; life = 0; mult = 1; banner = null;
   }
 
   function start() {
     resize(); reset(); state = 'run'; hold = false;
+    hud.mult.textContent = 'x1';
     last = performance.now();
     cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
   }
@@ -54,19 +64,6 @@ const Game = (() => {
     if (state !== 'idle') raf = requestAnimationFrame(loop);
   }
 
-  // --- spawning -----------------------------------------------------------
-  function spawnZapper() {
-    const L = rand(90, 170), ang = [0, Math.PI / 2, Math.PI / 4, -Math.PI / 4][Math.floor(Math.random() * 4)];
-    const hx = Math.cos(ang) * L / 2, hy = Math.sin(ang) * L / 2;
-    const cy = rand(TOP + Math.abs(hy) + 14, H - FLOOR_H - Math.abs(hy) - 14);
-    obs.push({ x: W + 90, y: cy, hx, hy });
-  }
-  function spawnCoins() {
-    const n = 5 + Math.floor(Math.random() * 5), y0 = rand(TOP + 40, H - FLOOR_H - 40), wave = Math.random() < .5;
-    for (let i = 0; i < n; i++) coins.push({ x: W + 40 + i * 30, y: y0 + (wave ? Math.sin(i * .8) * 34 : 0), a: rand(0, 6) });
-  }
-  function spawnMissile() { missiles.push({ x: W - 26, y: p.y, warn: 80, vx: 0 }); }
-
   function puff(x, y, n, color, spread = 2) {
     for (let i = 0; i < n; i++) parts.push({ k: 'puff', x, y, vx: rand(-spread, spread), vy: rand(-spread, spread), life: 40, max: 40, r: rand(3, 7), color });
   }
@@ -74,13 +71,23 @@ const Game = (() => {
   // --- update ---------------------------------------------------------------
   function update(dt) {
     if (state === 'run') {
-      dist += speed * dt; speed = Math.min(11, 4.2 + dist / 2600);
+      speed = Level.speedAt(dist); dist += speed * dt;
       p.vy += (hold ? -THRUST : G) * dt;
-      p.vy = Math.max(-7.5, Math.min(9, p.vy));
+      p.vy = Math.max(Level.VMIN, Math.min(Level.VMAX, p.vy));
       p.y += p.vy * dt;
-      const floor = H - FLOOR_H - p.r - 8;
-      if (p.y > floor) { p.y = floor; p.vy = 0; }
-      if (p.y < TOP + 40) { p.y = TOP + 40; p.vy = 0; }
+      if (p.y > laneBottom()) { p.y = laneBottom(); p.vy = 0; }
+      if (p.y < laneTop()) { p.y = laneTop(); p.vy = 0; }
+
+      // the longer you survive, the more each leaf is worth
+      life += dt;
+      const m = Math.min(MULT_MAX, 1 + Math.floor(life / MULT_EVERY));
+      if (m > mult) {
+        mult = m; banner = { txt: 'MOLTIPLICATORE x' + m, t: 90 };
+        hud.mult.textContent = 'x' + m;
+        hud.mult.classList.remove('pulse'); void hud.mult.offsetWidth; hud.mult.classList.add('pulse');
+        navigator.vibrate && navigator.vibrate(40);
+      }
+      if (banner && (banner.t -= dt) <= 0) banner = null;
 
       // the jetpack spits joints
       if (hold && Math.random() < .55 * dt) {
@@ -89,38 +96,42 @@ const Game = (() => {
       if (hold && Math.random() < .8 * dt) parts.push({ k: 'puff', x: p.x - 18, y: p.y + 18, vx: -speed * .5, vy: rand(1, 3), life: 30, max: 30, r: rand(4, 8), color: '220,220,220' });
       if (hold && Math.random() < .6 * dt) parts.push({ k: 'puff', x: p.x - 18, y: p.y + 16, vx: -1, vy: rand(2, 4), life: 12, max: 12, r: rand(3, 6), color: '255,160,40' });
 
-      if ((t.zap -= dt) <= 0) { spawnZapper(); t.zap = Math.max(38, 95 - dist / 120) + rand(0, 40); }
-      if ((t.coin -= dt) <= 0) { spawnCoins(); t.coin = rand(90, 160); }
-      if (dist > 3000 && (t.miss -= dt) <= 0) { spawnMissile(); t.miss = Math.max(150, 420 - dist / 60) + rand(0, 120); }
+      while (level.x < dist + W + 400) level.next();
 
-      for (const o of obs) {
-        o.x -= speed * dt;
-        if (segDist(p.x, p.y, o.x - o.hx, o.y - o.hy, o.x + o.hx, o.y + o.hy) < p.r + 6) die();
-      }
-      obs = obs.filter(o => o.x > -120);
+      const px = dist + p.x;
+      for (const o of level.obs) if (Level.hit(o, px, p.y, dist)) die();
+      level.obs = level.obs.filter(o => o.x + o.len / 2 + 20 > dist);
 
-      for (const c of coins) {
-        c.x -= speed * dt; c.a += .08 * dt;
-        if (!c.got && Math.hypot(c.x - p.x, c.y - p.y) < p.r + 12) {
-          c.got = true; leaves++; puff(c.x, c.y, 4, '120,220,120', 2.5);
+      for (const c of level.coins) {
+        c.a += .08 * dt;
+        if (Math.abs(c.x - px) < 30 && Math.abs(c.y - p.y + 4) < 30) {
+          c.got = true; leaves += mult; puff(c.x - dist, c.y, 4, '120,220,120', 2.5);
         }
       }
-      coins = coins.filter(c => !c.got && c.x > -30);
+      level.coins = level.coins.filter(c => !c.got && c.x > dist - 30);
 
-      for (const m of missiles) {
-        if (m.warn > 0) { m.warn -= dt; m.y += (p.y - m.y) * .06 * dt; if (m.warn <= 0) m.vx = speed + 7; }
-        else {
-          m.x -= m.vx * dt;
-          if (Math.random() < .7) parts.push({ k: 'puff', x: m.x + 18, y: m.y, vx: 1, vy: 0, life: 20, max: 20, r: 5, color: '200,200,200' });
-          if (Math.hypot(m.x - p.x, m.y - p.y) < p.r + 9) die();
+      // missile packs: warn, lock on, fire
+      for (const t of level.missiles) if (!t.done && px >= t.x) {
+        t.done = true;
+        for (let i = 0; i < t.n; i++) missiles.push({ x: W - 26, y: p.y, warn: 80 + i * 45, vx: 0 });
+      }
+      for (const mi of missiles) {
+        if (mi.warn > 0) {
+          mi.warn -= dt;
+          if (mi.warn > 25) mi.y += (p.y - mi.y) * .08 * dt;
+          if (mi.warn <= 0) mi.vx = speed + 7;
+        } else {
+          mi.x -= mi.vx * dt;
+          if (Math.random() < .7) parts.push({ k: 'puff', x: mi.x + 18, y: mi.y, vx: 1, vy: 0, life: 20, max: 20, r: 5, color: '200,200,200' });
+          if (Math.abs(mi.x - p.x) < 22 && mi.y > p.y - 30 && mi.y < p.y + 22) die();
         }
       }
-      missiles = missiles.filter(m => m.x > -60);
+      missiles = missiles.filter(mi => mi.x > -60);
 
       hud.dist.textContent = Math.floor(dist / 20) + ' m';
       hud.leaves.textContent = '🍃 ' + leaves;
     } else if (state === 'dead') {
-      p.vy += G * dt; p.y = Math.min(H - FLOOR_H - p.r - 8, p.y + p.vy * dt);
+      p.vy += G * dt; p.y = Math.min(laneBottom(), p.y + p.vy * dt);
     }
     for (const b of bg) { b.x -= speed * b.s * dt; if (b.x < -80) { b.x = W + 80; b.y = rand(0, H); } }
     for (const q of parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; if (q.k === 'joint') { q.rot += q.vr * dt; q.vy += .05 * dt; } }
@@ -129,17 +140,11 @@ const Game = (() => {
 
   function die() {
     if (state !== 'run') return;
-    state = 'dead'; hold = false;
+    state = 'dead'; hold = false; banner = null;
     puff(p.x, p.y, 24, '255,180,60', 5);
     navigator.vibrate && navigator.vibrate(200);
-    const meters = Math.floor(dist / 20), l = leaves;
-    setTimeout(() => { state = 'idle'; onOver(meters, l); }, 900);
-  }
-
-  function segDist(px, py, ax, ay, bx, by) {
-    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
-    const k = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2));
-    return Math.hypot(px - ax - k * dx, py - ay - k * dy);
+    const meters = Math.floor(dist / 20), l = leaves, m = mult;
+    setTimeout(() => { state = 'idle'; onOver(meters, l, m); }, 900);
   }
 
   // --- drawing --------------------------------------------------------------
@@ -255,26 +260,31 @@ const Game = (() => {
     ctx.fillStyle = '#3a2816';
     for (let x = -(dist % 60); x < W; x += 60) ctx.fillRect(x, fy + 26, 30, 6);
 
-    for (const c of coins) {
-      const sx = Math.abs(Math.cos(c.a));
-      ctx.save(); ctx.translate(c.x, c.y); ctx.scale(.4 + sx * .6, 1);
-      ctx.drawImage(leafSpr, -18, -20); ctx.restore();
-    }
-
-    for (const o of obs) {
-      const ax = o.x - o.hx, ay = o.y - o.hy, bx = o.x + o.hx, by = o.y + o.hy;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = 'rgba(253,216,53,.35)'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-      ctx.strokeStyle = '#fff59d'; ctx.lineWidth = 4 + Math.random() * 2; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-      for (const [x, y] of [[ax, ay], [bx, by]]) {
-        ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
-        ctx.fillStyle = '#ffcdd2'; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill();
+    if (level) {
+      for (const c of level.coins) {
+        const x = c.x - dist;
+        if (x < -30 || x > W + 30) continue;
+        const sx = Math.abs(Math.cos(c.a));
+        ctx.save(); ctx.translate(x, c.y); ctx.scale(.4 + sx * .6, 1);
+        ctx.drawImage(leafSpr, -18, -20); ctx.restore();
+      }
+      for (const o of level.obs) {
+        if (o.x - dist - o.len > W) continue;
+        let [ax, ay, bx, by] = Level.ends(o, dist);
+        ax -= dist; bx -= dist;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = o.spin ? 'rgba(255,82,82,.35)' : 'rgba(253,216,53,.35)'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+        ctx.strokeStyle = o.spin ? '#ffcdd2' : '#fff59d'; ctx.lineWidth = 4 + Math.random() * 2; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+        for (const [x, y] of [[ax, ay], [bx, by]]) {
+          ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
+          ctx.fillStyle = '#ffcdd2'; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill();
+        }
       }
     }
 
-    for (const m of missiles) {
+    for (const m of missiles || []) {
       if (m.warn > 0) {
-        if (Math.floor(m.warn / 8) % 2) {
+        if (m.warn <= 25 || Math.floor(m.warn / 8) % 2) {
           ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(W - 24, m.y, 14, 0, 7); ctx.fill();
           ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Bungee, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', W - 24, m.y + 1);
         }
@@ -294,6 +304,13 @@ const Game = (() => {
     }
     ctx.globalAlpha = 1;
     if (p) drawPlayer();
+    if (banner) {
+      ctx.save(); ctx.globalAlpha = Math.min(1, banner.t / 20);
+      ctx.font = '28px Bungee, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 6; ctx.strokeStyle = '#000'; ctx.strokeText(banner.txt, W / 2, H * .3);
+      ctx.fillStyle = '#fdd835'; ctx.fillText(banner.txt, W / 2, H * .3);
+      ctx.restore();
+    }
   }
 
   return { init, start, pause, resume, resize, preview, setChar };

@@ -92,10 +92,10 @@
   <section class="view" id="v-game">
     <div class="game-wrap">
       <canvas id="game"></canvas>
-      <div class="game-hud"><span id="hudDist">0 m</span><span id="hudLeaves">🍃 0</span></div>
+      <div class="game-hud"><span id="hudDist">0 m</span><span id="hudMult">x1</span><span id="hudLeaves">🍃 0</span></div>
       <div class="game-overlay" id="gameOverlay">
         <h2 id="goTitle">JAH-PACK RIDE</h2>
-        <p id="goText">Tieni premuto per accendere lo zaino a razzo.<br>Evita i laser, raccogli le foglie!</p>
+        <p id="goText">Tieni premuto per accendere lo zaino a razzo.<br>Evita i laser, raccogli le foglie!<br>Più resti in vita, più sale il moltiplicatore 🔥</p>
         <p class="muted" id="goBest"></p>
         <button class="btn" id="playBtn">GIOCA</button>
       </div>
@@ -134,6 +134,7 @@
 <div id="fx"></div>
 
 <script src="leaf.js"></script>
+<script src="level.js"></script>
 <script src="game.js"></script>
 <script src="app.js"></script>
 </body>
